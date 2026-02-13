@@ -1,0 +1,19 @@
+---
+/**
+ * /s/index.astro
+ * Catalog session page.
+ * Token comes from query param: /s/?token={uuid}
+ * The React island reads it client-side and fetches from n8n.
+ */
+
+import CatalogLayout from "../../layouts/CatalogLayout.astro";
+import CatalogShell from "../../components/catalog/CatalogShell";
+import "../../styles/global.css";
+---
+
+<CatalogLayout
+    title="Catálogo"
+    description="Explora nuestros productos y haz tu pedido"
+>
+    <CatalogShell client:load />
+</CatalogLayout>
