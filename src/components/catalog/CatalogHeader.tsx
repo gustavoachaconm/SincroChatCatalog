@@ -7,7 +7,7 @@ import type { Business, BusinessLocation, BusinessBranding } from '../../lib/typ
 
 interface CatalogHeaderProps {
     business: Business;
-    location: BusinessLocation;
+    location: BusinessLocation | null;
     branding: BusinessBranding;
     catalogName: string;
 }
@@ -47,10 +47,12 @@ export function CatalogHeader({
                 </h1>
 
                 {/* Location */}
-                <p className="text-white/70 text-sm font-medium inline-flex items-center gap-1 mt-1">
-                    <MapPin size={12} />
-                    {location.name}
-                </p>
+                {location && (
+                    <p className="text-white/70 text-sm font-medium inline-flex items-center gap-1 mt-1">
+                        <MapPin size={12} />
+                        {location.name}
+                    </p>
+                )}
             </div>
         </header>
     );

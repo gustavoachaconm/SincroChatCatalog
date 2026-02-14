@@ -9,9 +9,10 @@ interface ProductGridProps {
     section: SectionWithProducts;
     isVisible: boolean;
     onProductClick: (product: CatalogProduct) => void;
+    isReadOnly?: boolean;
 }
 
-export function ProductGrid({ section, isVisible, onProductClick }: ProductGridProps) {
+export function ProductGrid({ section, isVisible, onProductClick, isReadOnly = false }: ProductGridProps) {
     if (!isVisible) return null;
 
     const availableProducts = section.products.filter((cp) => cp.is_available);
@@ -36,6 +37,7 @@ export function ProductGrid({ section, isVisible, onProductClick }: ProductGridP
                             catalogProduct={cp}
                             onClick={() => onProductClick(cp)}
                             compact={isCompact}
+                            isReadOnly={isReadOnly}
                         />
                     ))}
                 </div>

@@ -14,8 +14,6 @@ import { generateCartItemId } from '../lib/utils';
 const STORAGE_KEY = 'sincro_cart';
 const TOKEN_KEY = 'sincro_cart_token';
 
-/** Current session token — set by initCartSession() */
-let currentToken: string | null = null;
 
 function loadCart(): CartItem[] {
     try {
@@ -28,6 +26,7 @@ function loadCart(): CartItem[] {
 }
 
 function saveCart(items: CartItem[]): void {
+    if (typeof window === 'undefined') return;
     try {
         if (items.length === 0) {
             localStorage.removeItem(STORAGE_KEY);
@@ -45,8 +44,6 @@ function saveCart(items: CartItem[]): void {
  * If it's a different token (new link), clear and start fresh.
  */
 export function initCartSession(token: string): void {
-    currentToken = token;
-
     try {
         const storedToken = localStorage.getItem(TOKEN_KEY);
 
@@ -72,7 +69,7 @@ export const $isCartOpen = atom<boolean>(false);
 
 // Sync to localStorage on every change
 $cartItems.subscribe((items) => {
-    saveCart(items);
+    saveCart([...items]);
 });
 
 // --- Computed values ---

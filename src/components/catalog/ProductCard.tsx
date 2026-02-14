@@ -12,9 +12,10 @@ interface ProductCardProps {
     catalogProduct: CatalogProduct;
     onClick: () => void;
     compact?: boolean;
+    isReadOnly?: boolean;
 }
 
-export function ProductCard({ catalogProduct, onClick, compact = false }: ProductCardProps) {
+export function ProductCard({ catalogProduct, onClick, compact = false, isReadOnly = false }: ProductCardProps) {
     const product = catalogProduct.product;
     if (!product) return null;
 
@@ -63,9 +64,11 @@ export function ProductCard({ catalogProduct, onClick, compact = false }: Produc
                         <span className="text-xs font-bold text-brand block">
                             {formatCurrency(product.price)}
                         </span>
-                        <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand group-hover:text-white transition-colors">
-                            <Plus size={14} />
-                        </div>
+                        {!isReadOnly && (
+                            <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand group-hover:text-white transition-colors">
+                                <Plus size={14} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </button>
@@ -113,13 +116,15 @@ export function ProductCard({ catalogProduct, onClick, compact = false }: Produc
                         {formatCurrency(product.price)}
                     </span>
 
-                    <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center
-                        bg-slate-100 group-hover:bg-brand group-hover:text-white
-                        text-slate-400 transition-all duration-200"
-                    >
-                        <Plus size={16} />
-                    </div>
+                    {!isReadOnly && (
+                        <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center
+                            bg-slate-100 group-hover:bg-brand group-hover:text-white
+                            text-slate-400 transition-all duration-200"
+                        >
+                            <Plus size={16} />
+                        </div>
+                    )}
                 </div>
             </div>
         </button>

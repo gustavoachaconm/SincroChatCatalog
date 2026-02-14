@@ -27,9 +27,7 @@ const DEMO_DATA: CatalogApiResponse = {
         id: 'demo-session',
         token: 'preview',
         business_id: 'demo-biz',
-        location_id: 'demo-loc',
         catalog_id: 'demo-cat',
-        expires_at: new Date(Date.now() + 86400000).toISOString(),
         created_at: new Date().toISOString(),
     },
     business: {
@@ -516,6 +514,8 @@ export default function CatalogShell() {
     }
 
 
+    const isReadOnly = data.session.type === 'read';
+
     return (
         <div className="min-h-dvh flex flex-col bg-slate-50">
             {/* Header with branding */}
@@ -582,23 +582,27 @@ export default function CatalogShell() {
                                 section={section}
                                 isVisible={true}
                                 onProductClick={setSelectedProduct}
+                                isReadOnly={isReadOnly}
                             />
                         </div>
                     ))
                 )}
             </main>
 
-            {/* Cart floating button */}
-            <CartFab />
-
-            {/* Cart drawer */}
-            <CartDrawer sessionToken={token} paymentMethods={data.payment_methods} />
+            {/* Cart (hidden in read-only mode) */}
+            {!isReadOnly && (
+                <>
+                    <CartFab />
+                    <CartDrawer sessionToken={token} paymentMethods={data.payment_methods} />
+                </>
+            )}
 
             {/* Product detail modal */}
             {selectedProduct && (
                 <ProductDetail
                     catalogProduct={selectedProduct}
                     onClose={() => setSelectedProduct(null)}
+                    isReadOnly={isReadOnly}
                 />
             )}
         </div>

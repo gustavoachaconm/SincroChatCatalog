@@ -130,10 +130,11 @@ export interface CatalogSession {
     id: string;
     token: string;
     business_id: string;
-    location_id: string;
     catalog_id: string;
-    expires_at: string;
     created_at: string;
+    order_id?: string;
+    customer_id?: string;
+    type?: 'read' | 'buy';
 }
 
 // --- Orders ---
@@ -186,7 +187,7 @@ export interface PaymentMethod {
 export interface CatalogApiResponse {
     session: CatalogSession;
     business: Business;
-    location: BusinessLocation;
+    location: BusinessLocation | null;
     branding: BusinessBranding;
     catalog: Catalog;
     sections: SectionWithProducts[];
