@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CatalogApiResponse, CatalogProduct, SectionWithProducts } from '../../lib/types';
 import { fetchCatalog, CatalogApiError } from '../../lib/api';
 import { applyBranding } from '../../lib/utils';
-import { Search } from 'lucide-react';
+import { Search, Smartphone } from 'lucide-react';
 import { CatalogHeader } from './CatalogHeader';
 import { SectionNav } from './SectionNav';
 import { SearchBar } from './SearchBar';
@@ -18,6 +18,31 @@ import { CartFab } from '../cart/CartFab';
 import { initCartSession } from '../../stores/cartStore';
 import { LoadingState } from '../ui/LoadingState';
 import { ErrorState } from '../ui/ErrorState';
+
+function isMobileDevice(): boolean {
+    if (typeof window === 'undefined') return true;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (window.innerWidth <= 768);
+}
+
+function MobileOnlyScreen() {
+    return (
+        <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
+            <div className="text-center max-w-sm animate-fade-in">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                    <Smartphone size={36} className="text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-slate-900 mb-3">
+                    Abre este enlace desde tu celular
+                </h1>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                    Este catálogo está diseñado para verse en dispositivos móviles.
+                    Escanea el código QR o abre el enlace desde WhatsApp en tu teléfono.
+                </p>
+            </div>
+        </div>
+    );
+}
 
 // No props needed — token is read from URL query params
 
@@ -363,7 +388,13 @@ const DEMO_DATA: CatalogApiResponse = {
 };
 
 export default function CatalogShell() {
-    // Read token from URL: /catalog?t=xxx
+    const [isMobile] = useState(() => isMobileDevice());
+
+    if (!isMobile) {
+        return <MobileOnlyScreen />;
+    }
+
+    // Read token from URL: /?t=xxx
     const [token] = useState<string>(() => {
         if (typeof window === 'undefined') return '';
         const params = new URLSearchParams(window.location.search);
