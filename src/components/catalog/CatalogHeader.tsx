@@ -2,7 +2,7 @@
 // CatalogHeader — Business branding, name, location info
 // ============================================================
 
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, Eye } from 'lucide-react';
 import type { Business, BusinessLocation, BusinessBranding } from '../../lib/types';
 
 interface CatalogHeaderProps {
@@ -10,6 +10,7 @@ interface CatalogHeaderProps {
     location: BusinessLocation | null;
     branding: BusinessBranding;
     catalogName: string;
+    isReadOnly?: boolean;
 }
 
 export function CatalogHeader({
@@ -17,12 +18,20 @@ export function CatalogHeader({
     location,
     branding,
     catalogName,
+    isReadOnly,
 }: CatalogHeaderProps) {
     return (
         <header
             className="relative overflow-hidden"
             style={{ backgroundColor: branding.primary_color || '#6366f1' }}
         >
+            {/* Read-only indicator */}
+            {isReadOnly && (
+                <div className="relative z-10 bg-black/20 backdrop-blur-sm px-4 py-1.5 flex items-center justify-center gap-1.5">
+                    <Eye size={16} className="text-white/80" />
+                    <span className="text-xs font-medium text-white/90 tracking-wide uppercase">Solo lectura</span>
+                </div>
+            )}
 
             {/* Content */}
             <div className="relative z-10 px-5 pt-14 pb-6 flex flex-col items-center text-center">

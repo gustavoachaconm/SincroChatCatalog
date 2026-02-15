@@ -555,6 +555,7 @@ export default function CatalogShell() {
                 location={data.location}
                 branding={data.branding}
                 catalogName={data.catalog.name}
+                isReadOnly={isReadOnly}
             />
 
             {/* Sticky Header: Search + Nav */}
