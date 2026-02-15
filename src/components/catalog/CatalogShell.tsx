@@ -3,7 +3,7 @@
 // Manages data fetching, state, and renders the full catalog.
 // ============================================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { CatalogApiResponse, CatalogProduct, SectionWithProducts } from '../../lib/types';
 import { fetchCatalog, CatalogApiError } from '../../lib/api';
 import { applyBranding } from '../../lib/utils';
@@ -409,6 +409,7 @@ export default function CatalogShell() {
     const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+    const isScrollingProgrammatically = useRef(false);
 
     // Reset subcategory when changing main section
     useEffect(() => {
@@ -455,6 +456,37 @@ export default function CatalogShell() {
             setActiveSection(filteredSections[0].id);
         }
     }, [filteredSections, activeSection]);
+
+    // Update activeSection on scroll using IntersectionObserver
+    useEffect(() => {
+        if (searchQuery || displayedSections.length === 0) return;
+
+        const stickyHeader = document.querySelector('[data-sticky-header]') as HTMLElement;
+        const topMargin = stickyHeader ? stickyHeader.offsetHeight + 20 : 130;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (isScrollingProgrammatically.current) return;
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        const sectionId = entry.target.id.replace('section-', '');
+                        setActiveSection(sectionId);
+                    }
+                }
+            },
+            {
+                rootMargin: `-${topMargin}px 0px -60% 0px`,
+                threshold: 0,
+            }
+        );
+
+        displayedSections.forEach((section) => {
+            const el = document.getElementById(`section-${section.id}`);
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
+    }, [displayedSections, searchQuery]);
 
     const loadCatalog = useCallback(async () => {
 
@@ -568,6 +600,7 @@ export default function CatalogShell() {
                         items={displayedSections}
                         activeId={activeSection}
                         onChange={(id) => {
+                            isScrollingProgrammatically.current = true;
                             setActiveSection(id);
                             // Wait for state update so sticky header resizes
                             requestAnimationFrame(() => {
@@ -581,6 +614,10 @@ export default function CatalogShell() {
                                         behavior: 'smooth'
                                     });
                                 }
+                                // Release lock after scroll settles
+                                setTimeout(() => {
+                                    isScrollingProgrammatically.current = false;
+                                }, 800);
                             });
                         }}
                     />
