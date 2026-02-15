@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { CatalogApiResponse, CatalogProduct, SectionWithProducts } from '../../lib/types';
 import { fetchCatalog, CatalogApiError } from '../../lib/api';
 import { applyBranding } from '../../lib/utils';
-import { Search, Smartphone } from 'lucide-react';
+import { Search, Smartphone, ChevronUp } from 'lucide-react';
 import { CatalogHeader } from './CatalogHeader';
 import { SectionNav } from './SectionNav';
 import { SearchBar } from './SearchBar';
@@ -409,6 +409,7 @@ export default function CatalogShell() {
     const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+    const [showScrollTop, setShowScrollTop] = useState(false);
     const isScrollingProgrammatically = useRef(false);
 
     // Reset subcategory when changing main section
@@ -457,35 +458,45 @@ export default function CatalogShell() {
         }
     }, [filteredSections, activeSection]);
 
-    // Update activeSection on scroll using IntersectionObserver
+    // Show/hide scroll-to-top button based on scroll position
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 300);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Update activeSection on scroll — find the last section whose top has passed the sticky header
     useEffect(() => {
         if (searchQuery || displayedSections.length === 0) return;
 
         const stickyHeader = document.querySelector('[data-sticky-header]') as HTMLElement;
         const topMargin = stickyHeader ? stickyHeader.offsetHeight + 20 : 130;
+        const sectionIds = displayedSections.map(s => s.id);
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (isScrollingProgrammatically.current) return;
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        const sectionId = entry.target.id.replace('section-', '');
-                        setActiveSection(sectionId);
-                    }
-                }
-            },
-            {
-                rootMargin: `-${topMargin}px 0px -60% 0px`,
-                threshold: 0,
+        const handleScroll = () => {
+            if (isScrollingProgrammatically.current) return;
+
+            // If user scrolled to the bottom, activate the last section
+            const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 50);
+            if (atBottom) {
+                setActiveSection(sectionIds[sectionIds.length - 1]);
+                return;
             }
-        );
 
-        displayedSections.forEach((section) => {
-            const el = document.getElementById(`section-${section.id}`);
-            if (el) observer.observe(el);
-        });
+            let current = sectionIds[0];
+            for (const id of sectionIds) {
+                const el = document.getElementById(`section-${id}`);
+                if (el && el.getBoundingClientRect().top <= topMargin + 10) {
+                    current = id;
+                }
+            }
+            setActiveSection(current);
+        };
 
-        return () => observer.disconnect();
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [displayedSections, searchQuery]);
 
     const loadCatalog = useCallback(async () => {
@@ -635,7 +646,7 @@ export default function CatalogShell() {
             </div>
 
             {/* Products */}
-            <main className="flex-1 px-4 pb-28">
+            <main className="flex-1 px-4 pb-6">
                 {displayedSections.length === 0 && searchQuery ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
@@ -658,6 +669,12 @@ export default function CatalogShell() {
                 )}
             </main>
 
+            {/* Powered by footer */}
+            <footer className="py-5 pb-8 flex items-center justify-center gap-1.5 text-slate-800">
+                <span className="text-[11px]">Este catálogo fue creado con</span>
+                <img src="/favicon.svg" alt="SincroChat" className="h-7 w-7 ml-1" />
+            </footer>
+
             {/* Cart (hidden in read-only mode) */}
             {!isReadOnly && (
                 <>
@@ -674,6 +691,23 @@ export default function CatalogShell() {
                     isReadOnly={isReadOnly}
                 />
             )}
+
+            {/* Scroll to top button */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className={`
+                    fixed bottom-6 right-4 z-40
+                    w-10 h-10 rounded-full bg-white shadow-lg shadow-black/10
+                    flex items-center justify-center
+                    border border-slate-200
+                    transition-all duration-300
+                    active:scale-90
+                    ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+                `}
+                aria-label="Volver arriba"
+            >
+                <ChevronUp size={20} className="text-slate-600" />
+            </button>
         </div>
     );
 }
