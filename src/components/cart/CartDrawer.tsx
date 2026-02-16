@@ -226,7 +226,13 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                                     <div className="flex items-center gap-2.5">
                                         <Phone size={15} className="text-slate-400 flex-shrink-0" />
                                         <span className="text-sm text-slate-600">
-                                            +{customerPhone.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1 $2 $3 $4')}
+                                            {(() => {
+                                                const d = customerPhone.replace(/\D/g, '');
+                                                if (d.length === 12) return `+${d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1 $2 $3 $4')}`;
+                                                if (d.length === 11) return `+${d.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, '$1 $2 $3 $4')}`;
+                                                if (d.length === 10) return `+${d.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')}`;
+                                                return `+${d}`;
+                                            })()}
                                         </span>
                                     </div>
                                 )}
