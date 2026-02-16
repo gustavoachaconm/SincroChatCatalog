@@ -2,7 +2,8 @@
 // CartDrawer — Full-screen cart view with premium styling
 // ============================================================
 
-import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag, ImageOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag, ImageOff, MapPin, Phone, Bike, Store } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import {
     $cartItems,
@@ -13,18 +14,51 @@ import {
     updateCartItemQuantity,
     clearCart,
 } from '../../stores/cartStore';
-import type { PaymentMethod } from '../../lib/types';
+import type { Order, PaymentMethod } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
 
 interface CartDrawerProps {
     sessionToken: string;
     paymentMethods: PaymentMethod[];
+    order?: Order | null;
+    customerPhone?: string | null;
 }
 
-export function CartDrawer({ sessionToken, paymentMethods }: CartDrawerProps) {
+export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone }: CartDrawerProps) {
     const items = useStore($cartItems);
     const subtotal = useStore($cartSubtotal);
     const isOpen = useStore($isCartOpen);
+    const [deliveryFee, setDeliveryFee] = useState<number | null>(order?.delivery_fee ?? null);
+
+    // Sync deliveryFee when order prop changes (initial load)
+    useEffect(() => {
+        setDeliveryFee(order?.delivery_fee ?? null);
+    }, [order?.id]);
+
+    // Realtime: escucha actualizaciones del delivery_fee en la orden
+    useEffect(() => {
+        if (!order?.id) return;
+
+        const channel = supabase
+            .channel(`order-fee-${order.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'order',
+                    filter: `id=eq.${order.id}`,
+                },
+                (payload) => {
+                    const fee = (payload.new as { delivery_fee?: number | null }).delivery_fee;
+                    setDeliveryFee(fee ?? null);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [order?.id]);
 
     if (!isOpen) return null;
 
@@ -183,25 +217,75 @@ export function CartDrawer({ sessionToken, paymentMethods }: CartDrawerProps) {
                     )}
                 </div>
 
-                {/* Footer: Subtotal + Checkout */}
+                {/* Footer: Order info + Totals + Checkout */}
                 {items.length > 0 && (
                     <div
-                        className="px-4 pt-4 border-t border-slate-100 bg-white"
+                        className="px-4 pt-4 border-t border-slate-100 bg-white space-y-4"
                         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
                     >
-                        {/* Order summary */}
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <span className="text-xs text-slate-400 uppercase tracking-wide font-medium">
-                                    Subtotal
-                                </span>
-                                <p className="text-xl font-bold text-slate-900 -mt-0.5">
-                                    {formatCurrency(subtotal)}
+                        {/* Order info section */}
+                        {order && (
+                            <div className="bg-slate-50 rounded-2xl p-3.5 space-y-2.5">
+                                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                                    Info del pedido
                                 </p>
+
+                                {/* Type */}
+                                <div className="flex items-center gap-2.5">
+                                    {order.type === 'delivery' ? (
+                                        <Bike size={15} className="text-slate-400 flex-shrink-0" />
+                                    ) : (
+                                        <Store size={15} className="text-slate-400 flex-shrink-0" />
+                                    )}
+                                    <span className="text-sm text-slate-700 font-medium">
+                                        {order.type === 'delivery' ? 'Domicilio' : 'Recoger en tienda'}
+                                    </span>
+                                </div>
+
+                                {/* Address (only if delivery) */}
+                                {order.type === 'delivery' && order.delivery_address && (
+                                    <div className="flex items-start gap-2.5">
+                                        <MapPin size={15} className="text-slate-400 flex-shrink-0 mt-0.5" />
+                                        <span className="text-sm text-slate-600 leading-snug">
+                                            {order.delivery_address}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Customer phone */}
+                                {customerPhone && (
+                                    <div className="flex items-center gap-2.5">
+                                        <Phone size={15} className="text-slate-400 flex-shrink-0" />
+                                        <span className="text-sm text-slate-600">{customerPhone}</span>
+                                    </div>
+                                )}
                             </div>
-                            <span className="text-[11px] text-slate-300">
-                                Impuestos calculados al finalizar
-                            </span>
+                        )}
+
+                        {/* Totals */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-500">Subtotal</span>
+                                <span className="text-sm font-semibold text-slate-800">
+                                    {formatCurrency(subtotal)}
+                                </span>
+                            </div>
+
+                            {deliveryFee != null && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-slate-500">Domicilio</span>
+                                    <span className="text-sm font-semibold text-slate-800">
+                                        {formatCurrency(deliveryFee)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                                <span className="text-base font-bold text-slate-900">Total</span>
+                                <span className="text-xl font-bold" style={{ color: 'var(--brand-primary)' }}>
+                                    {formatCurrency(deliveryFee != null ? subtotal + deliveryFee : subtotal)}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Checkout button */}

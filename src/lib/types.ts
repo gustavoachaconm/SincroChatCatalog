@@ -139,6 +139,13 @@ export interface CatalogSession {
 
 // --- Orders ---
 
+export interface Order {
+    id: string;
+    type: 'delivery' | 'pick_up';
+    delivery_address?: string | null;
+    delivery_fee?: number | null;
+}
+
 export interface OrderPayload {
     session_token: string;
     customer_id: string;
@@ -192,6 +199,7 @@ export interface CatalogApiResponse {
     catalog: Catalog;
     sections: SectionWithProducts[];
     payment_methods: PaymentMethod[];
+    order?: Order | null;
 }
 
 export interface SectionWithProducts extends CatalogSection {

@@ -4,6 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useStore } from '@nanostores/react';
 import type { CatalogApiResponse, CatalogProduct, SectionWithProducts } from '../../lib/types';
 import { fetchCatalog, CatalogApiError } from '../../lib/api';
 import { applyBranding } from '../../lib/utils';
@@ -15,7 +16,7 @@ import { ProductGrid } from './ProductGrid';
 import { ProductDetail } from './ProductDetail';
 import { CartDrawer } from '../cart/CartDrawer';
 import { CartFab } from '../cart/CartFab';
-import { initCartSession } from '../../stores/cartStore';
+import { initCartSession, $cartCount, $isCartOpen } from '../../stores/cartStore';
 import { LoadingState } from '../ui/LoadingState';
 import { ErrorState } from '../ui/ErrorState';
 
@@ -410,6 +411,8 @@ export default function CatalogShell() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const cartCount = useStore($cartCount);
+    const isCartOpen = useStore($isCartOpen);
     const isScrollingProgrammatically = useRef(false);
 
     // Reset subcategory when changing main section
@@ -679,7 +682,12 @@ export default function CatalogShell() {
             {!isReadOnly && (
                 <>
                     <CartFab />
-                    <CartDrawer sessionToken={token} paymentMethods={data.payment_methods} />
+                    <CartDrawer
+                        sessionToken={token}
+                        paymentMethods={data.payment_methods}
+                        order={data.order}
+                        customerPhone={data.session.customer_id}
+                    />
                 </>
             )}
 
@@ -695,18 +703,21 @@ export default function CatalogShell() {
             {/* Scroll to top button */}
             <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                style={{
+                    bottom: cartCount > 0 && !isCartOpen && !isReadOnly ? '88px' : '24px',
+                    backgroundColor: 'var(--brand-primary)',
+                }}
                 className={`
-                    fixed bottom-6 right-4 z-40
-                    w-10 h-10 rounded-full bg-white shadow-lg shadow-black/10
+                    fixed right-4 z-50
+                    w-10 h-10 rounded-full shadow-lg shadow-black/10
                     flex items-center justify-center
-                    border border-slate-200
                     transition-all duration-300
                     active:scale-90
                     ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
                 `}
                 aria-label="Volver arriba"
             >
-                <ChevronUp size={20} className="text-slate-600" />
+                <ChevronUp size={20} className="text-white" />
             </button>
         </div>
     );

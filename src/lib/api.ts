@@ -4,7 +4,7 @@
 // The frontend NEVER accesses Supabase directly.
 // ============================================================
 
-import type { CatalogApiResponse, OrderPayload } from './types';
+import type { CatalogApiResponse, Order, OrderPayload } from './types';
 
 // n8n webhook base URL — configure this via environment variable
 const API_BASE = import.meta.env.PUBLIC_N8N_WEBHOOK_URL || 'https://n8n.example.com/webhook';
