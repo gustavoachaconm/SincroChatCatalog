@@ -2,19 +2,20 @@
 // CartDrawer — Full-screen cart view with premium styling
 // ============================================================
 
-import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag, ImageOff, MapPin, Phone, Bike, Store } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag, ImageOff, MapPin, Phone, Bike, Store, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import {
     $cartItems,
     $cartSubtotal,
     $isCartOpen,
     toggleCart,
-    removeFromCart,
     updateCartItemQuantity,
     clearCart,
 } from '../../stores/cartStore';
-import type { Order, PaymentMethod } from '../../lib/types';
+import type { Order, PaymentMethod, OrderPayload } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
+import { submitOrder } from '../../lib/api';
 
 interface CartDrawerProps {
     sessionToken: string;
@@ -29,7 +30,75 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
     const subtotal = useStore($cartSubtotal);
     const isOpen = useStore($isCartOpen);
 
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [isSuccess, setIsSuccess] = useState(false);
+
     if (!isOpen) return null;
+
+    const total = deliveryFee != null ? subtotal + deliveryFee : subtotal;
+
+    async function handleSubmit() {
+        if (!order || !customerPhone) return;
+
+        setIsSubmitting(true);
+        setSubmitError(null);
+
+        const payload: OrderPayload = {
+            session_token: sessionToken,
+            customer_id: customerPhone,
+            type: order.type,
+            delivery_address: order.delivery_address ?? undefined,
+            items: items.map((item) => ({
+                product_id:  item.product.id,
+                base_price:  item.product.price,
+                quantity:    item.quantity,
+                unit_price:  item.unit_price,
+                total_price: item.total_price,
+                modifiers:   item.modifiers,
+                notes:       item.notes,
+            })),
+        };
+
+        try {
+            await submitOrder(payload);
+            clearCart();
+            setShowConfirmModal(false);
+            setIsSuccess(true);
+        } catch {
+            setSubmitError('No se pudo enviar el pedido. Intenta de nuevo.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    // ── Success screen ──────────────────────────────────────────
+    if (isSuccess) {
+        return (
+            <div className="fixed inset-0 z-50 flex flex-col">
+                <div className="relative bg-white w-full h-full flex flex-col items-center justify-center px-8 animate-fade-in">
+                    <div
+                        className="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                        style={{ backgroundColor: 'var(--brand-primary)' }}
+                    >
+                        <CheckCircle size={48} className="text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Pedido enviado!</h2>
+                    <p className="text-slate-500 text-sm text-center leading-relaxed mb-8">
+                        Tu pedido fue recibido. El negocio se comunicará contigo pronto por WhatsApp.
+                    </p>
+                    <button
+                        onClick={toggleCart}
+                        className="px-8 py-3 rounded-2xl text-white font-semibold text-[15px] active:scale-95 transition-transform"
+                        style={{ backgroundColor: 'var(--brand-primary)' }}
+                    >
+                        Volver al catálogo
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex flex-col">
@@ -260,22 +329,94 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                             <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
                                 <span className="text-base font-bold text-slate-900">Total</span>
                                 <span className="text-xl font-bold" style={{ color: 'var(--brand-primary)' }}>
-                                    {formatCurrency(deliveryFee != null ? subtotal + deliveryFee : subtotal)}
+                                    {formatCurrency(total)}
                                 </span>
                             </div>
                         </div>
 
+                        {/* Error message */}
+                        {submitError && (
+                            <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl">
+                                <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
+                                <p className="text-sm text-red-500">{submitError}</p>
+                            </div>
+                        )}
+
                         {/* Checkout button */}
                         <button
+                            onClick={() => setShowConfirmModal(true)}
                             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-white
                                 font-semibold text-[15px] shadow-lg transition-all duration-200 active:scale-[0.98]"
                             style={{ backgroundColor: 'var(--brand-primary)' }}
                         >
-                            Continuar con el pedido
+                            Confirmar pedido
                         </button>
                     </div>
                 )}
             </div>
+
+            {/* Confirmation modal */}
+            {showConfirmModal && (
+                <div className="absolute inset-0 z-10 flex items-end justify-center animate-fade-in">
+                    {/* Modal backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/40"
+                        onClick={() => !isSubmitting && setShowConfirmModal(false)}
+                    />
+
+                    {/* Modal sheet */}
+                    <div className="relative w-full bg-white rounded-t-3xl px-5 pt-5 animate-slide-up"
+                        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}
+                    >
+                        {/* Handle */}
+                        <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-5" />
+
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">¿Confirmar pedido?</h3>
+                        <p className="text-sm text-slate-400 mb-4">
+                            {items.length} {items.length === 1 ? 'producto' : 'productos'} · Total{' '}
+                            <span className="font-semibold" style={{ color: 'var(--brand-primary)' }}>
+                                {formatCurrency(total)}
+                            </span>
+                        </p>
+
+                        {submitError && (
+                            <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl mb-4">
+                                <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
+                                <p className="text-sm text-red-500">{submitError}</p>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowConfirmModal(false); setSubmitError(null); }}
+                                disabled={isSubmitting}
+                                className="flex-1 py-3.5 rounded-2xl border border-slate-200 text-slate-600
+                                    font-semibold text-[15px] active:scale-95 transition-transform
+                                    disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl
+                                    text-white font-semibold text-[15px] shadow-lg
+                                    active:scale-95 transition-transform disabled:opacity-60"
+                                style={{ backgroundColor: 'var(--brand-primary)' }}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 size={17} className="animate-spin" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    'Sí, confirmar'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

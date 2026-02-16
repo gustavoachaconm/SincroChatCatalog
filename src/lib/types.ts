@@ -150,24 +150,23 @@ export interface OrderPayload {
     session_token: string;
     customer_id: string;
     type: 'delivery' | 'pick_up';
-    payment_method?: string;
     delivery_address?: string;
     items: OrderItemPayload[];
 }
 
 export interface OrderItemPayload {
-    catalog_product_id: string;
     product_id: string;
+    base_price: number;
     quantity: number;
-    modifiers: SelectedModifier[];
-    notes?: string;
     unit_price: number;
     total_price: number;
+    modifiers: SelectedModifier[];
+    notes?: string;
 }
 
 export interface SelectedModifier {
-    subsection_id: string;
-    subsection_name: string;
+    subsection_id?: string;
+    subsection_name?: string;
     items: SelectedModifierItem[];
 }
 

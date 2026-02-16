@@ -64,14 +64,9 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
     const handleAddToCart = () => {
         const modifiers: SelectedModifier[] = Object.entries(modifierSelections)
             .filter(([, items]) => items.length > 0)
-            .map(([subsectionId, items]) => {
-                const sub = subsections.find((s) => s.subsection.id === subsectionId);
-                return {
-                    subsection_id: subsectionId,
-                    subsection_name: sub?.subsection.name || '',
-                    items,
-                };
-            });
+            .map(([, items]) => ({
+                items,
+            }));
 
         addToCart(
             catalogProduct.id,

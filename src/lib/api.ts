@@ -4,17 +4,22 @@
 // The frontend NEVER accesses Supabase directly.
 // ============================================================
 
-import type { CatalogApiResponse, Order, OrderPayload } from './types';
+import type { CatalogApiResponse, OrderPayload } from './types';
 
-// n8n webhook base URL — configure this via environment variable
-const API_BASE = import.meta.env.PUBLIC_N8N_WEBHOOK_URL || 'https://n8n.example.com/webhook';
+// n8n webhook base URL — configure via PUBLIC_N8N_BASE_URL (without trailing slash)
+// e.g. https://cloud.sincro.chat/webhook
+const API_BASE = import.meta.env.PUBLIC_N8N_BASE_URL || 'https://n8n.example.com/webhook';
+
+// Order endpoint — uses TEST base when available, falls back to prod base
+const ORDER_BASE = import.meta.env.PUBLIC_N8N_TEST_URL || API_BASE;
+const ORDER_URL = `${ORDER_BASE}/order`;
 
 /**
  * Fetch the full catalog data for a given session token.
  * n8n validates the token, checks expiration, and returns all catalog data.
  */
 export async function fetchCatalog(token: string): Promise<CatalogApiResponse> {
-    const response = await fetch(`${API_BASE}?t=${token}`, {
+    const response = await fetch(`${API_BASE}/catalog?t=${token}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -37,7 +42,7 @@ export async function fetchCatalog(token: string): Promise<CatalogApiResponse> {
  * n8n creates the order, order items, and notifies the business.
  */
 export async function submitOrder(order: OrderPayload): Promise<{ order_id: string }> {
-    const response = await fetch(`${API_BASE}/order`, {
+    const response = await fetch(ORDER_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
