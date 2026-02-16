@@ -17,6 +17,7 @@ import { ProductDetail } from './ProductDetail';
 import { CartDrawer } from '../cart/CartDrawer';
 import { CartFab } from '../cart/CartFab';
 import { initCartSession, $cartCount, $isCartOpen } from '../../stores/cartStore';
+import { supabase } from '../../lib/supabase';
 import { LoadingState } from '../ui/LoadingState';
 import { ErrorState } from '../ui/ErrorState';
 
@@ -406,11 +407,13 @@ export default function CatalogShell() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExpired, setIsExpired] = useState(false);
+    const [isNotFound, setIsNotFound] = useState(false);
     const [activeSection, setActiveSection] = useState<string>('');
     const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
     const cartCount = useStore($cartCount);
     const isCartOpen = useStore($isCartOpen);
     const isScrollingProgrammatically = useRef(false);
@@ -419,6 +422,31 @@ export default function CatalogShell() {
     useEffect(() => {
         setActiveSubcategory(null);
     }, [activeSection]);
+
+    // Sync deliveryFee desde el order inicial
+    useEffect(() => {
+        setDeliveryFee(data?.order?.delivery_fee ?? null);
+    }, [data?.order?.id]);
+
+    // Realtime: escucha cambios en delivery_fee de la orden
+    useEffect(() => {
+        const orderId = data?.order?.id;
+        if (!orderId) return;
+
+        const channel = supabase
+            .channel(`order-fee-${orderId}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'order', filter: `id=eq.${orderId}` },
+                (payload) => {
+                    const fee = (payload.new as { delivery_fee?: number | null }).delivery_fee;
+                    setDeliveryFee(fee ?? null);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [data?.order?.id]);
 
     const filteredSections: SectionWithProducts[] = useMemo(() => {
         if (!data) return [];
@@ -548,6 +576,7 @@ export default function CatalogShell() {
                     setIsExpired(true);
                     setError('Este enlace ha expirado');
                 } else if (err.isNotFound) {
+                    setIsNotFound(true);
                     setError('Catálogo no encontrado');
                 } else {
                     setError(err.message);
@@ -585,7 +614,8 @@ export default function CatalogShell() {
             <ErrorState
                 message={error || 'Error desconocido'}
                 isExpired={isExpired}
-                onRetry={!isExpired ? loadCatalog : undefined}
+                isNotFound={isNotFound}
+                onRetry={!isExpired && !isNotFound ? loadCatalog : undefined}
             />
         );
     }
@@ -687,6 +717,7 @@ export default function CatalogShell() {
                         paymentMethods={data.payment_methods}
                         order={data.order}
                         customerPhone={data.session.customer_id}
+                        deliveryFee={deliveryFee}
                     />
                 </>
             )}
@@ -713,7 +744,7 @@ export default function CatalogShell() {
                     flex items-center justify-center
                     transition-all duration-300
                     active:scale-90
-                    ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+                    ${showScrollTop && !selectedProduct && !isCartOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
                 `}
                 aria-label="Volver arriba"
             >

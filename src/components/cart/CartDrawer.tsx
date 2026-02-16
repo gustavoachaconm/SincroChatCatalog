@@ -2,7 +2,6 @@
 // CartDrawer — Full-screen cart view with premium styling
 // ============================================================
 
-import { useState, useEffect } from 'react';
 import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag, ImageOff, MapPin, Phone, Bike, Store } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import {
@@ -16,49 +15,19 @@ import {
 } from '../../stores/cartStore';
 import type { Order, PaymentMethod } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
-import { supabase } from '../../lib/supabase';
 
 interface CartDrawerProps {
     sessionToken: string;
     paymentMethods: PaymentMethod[];
     order?: Order | null;
     customerPhone?: string | null;
+    deliveryFee: number | null;
 }
 
-export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone }: CartDrawerProps) {
+export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone, deliveryFee }: CartDrawerProps) {
     const items = useStore($cartItems);
     const subtotal = useStore($cartSubtotal);
     const isOpen = useStore($isCartOpen);
-    const [deliveryFee, setDeliveryFee] = useState<number | null>(order?.delivery_fee ?? null);
-
-    // Sync deliveryFee when order prop changes (initial load)
-    useEffect(() => {
-        setDeliveryFee(order?.delivery_fee ?? null);
-    }, [order?.id]);
-
-    // Realtime: escucha actualizaciones del delivery_fee en la orden
-    useEffect(() => {
-        if (!order?.id) return;
-
-        const channel = supabase
-            .channel(`order-fee-${order.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'order',
-                    filter: `id=eq.${order.id}`,
-                },
-                (payload) => {
-                    const fee = (payload.new as { delivery_fee?: number | null }).delivery_fee;
-                    setDeliveryFee(fee ?? null);
-                }
-            )
-            .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
-    }, [order?.id]);
 
     if (!isOpen) return null;
 
@@ -256,7 +225,9 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone 
                                 {customerPhone && (
                                     <div className="flex items-center gap-2.5">
                                         <Phone size={15} className="text-slate-400 flex-shrink-0" />
-                                        <span className="text-sm text-slate-600">{customerPhone}</span>
+                                        <span className="text-sm text-slate-600">
+                                            +{customerPhone.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1 $2 $3 $4')}
+                                        </span>
                                     </div>
                                 )}
                             </div>
