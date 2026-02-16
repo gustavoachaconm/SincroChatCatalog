@@ -215,7 +215,7 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                                 {order.type === 'delivery' && order.delivery_address && (
                                     <div className="flex items-start gap-2.5">
                                         <MapPin size={15} className="text-slate-400 flex-shrink-0 mt-0.5" />
-                                        <span className="text-sm text-slate-600 leading-snug">
+                                        <span className="text-sm text-slate-700 font-medium leading-snug">
                                             {order.delivery_address}
                                         </span>
                                     </div>
@@ -225,7 +225,7 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                                 {customerPhone && (
                                     <div className="flex items-center gap-2.5">
                                         <Phone size={15} className="text-slate-400 flex-shrink-0" />
-                                        <span className="text-sm text-slate-600">
+                                        <span className="text-sm text-slate-700 font-medium">
                                             {(() => {
                                                 const d = customerPhone.replace(/\D/g, '');
                                                 if (d.length === 12) return `+${d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1 $2 $3 $4')}`;
