@@ -10,9 +10,6 @@ import type { CatalogApiResponse, OrderPayload } from './types';
 // e.g. https://cloud.sincro.chat/webhook
 const API_BASE = import.meta.env.PUBLIC_N8N_BASE_URL || 'https://n8n.example.com/webhook';
 
-// Order endpoint — uses TEST base when available, falls back to prod base
-const ORDER_BASE = import.meta.env.PUBLIC_N8N_TEST_URL || API_BASE;
-const ORDER_URL = `${ORDER_BASE}/order`;
 
 /**
  * Fetch the full catalog data for a given session token.
@@ -42,7 +39,7 @@ export async function fetchCatalog(token: string): Promise<CatalogApiResponse> {
  * n8n creates the order, order items, and notifies the business.
  */
 export async function submitOrder(order: OrderPayload): Promise<{ order_id: string }> {
-    const response = await fetch(ORDER_URL, {
+    const response = await fetch(`${API_BASE}/order`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
