@@ -62,9 +62,13 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
     );
 
     const handleAddToCart = () => {
+        const subsectionMap = Object.fromEntries(
+            subsections.map((cps) => [cps.subsection.id, cps.subsection.name])
+        );
         const modifiers: SelectedModifier[] = Object.entries(modifierSelections)
             .filter(([, items]) => items.length > 0)
-            .map(([, items]) => ({
+            .map(([subsectionId, items]) => ({
+                group_name: subsectionMap[subsectionId],
                 items,
             }));
 

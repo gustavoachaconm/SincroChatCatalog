@@ -167,6 +167,7 @@ export interface OrderItemPayload {
 export interface SelectedModifier {
     subsection_id?: string;
     subsection_name?: string;
+    group_name?: string;
     items: SelectedModifierItem[];
 }
 
