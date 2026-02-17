@@ -84,17 +84,13 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                     >
                         <CheckCircle size={48} className="text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Pedido enviado!</h2>
-                    <p className="text-slate-500 text-sm text-center leading-relaxed mb-8">
-                        Tu pedido fue recibido. El negocio se comunicará contigo pronto por WhatsApp.
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Pedido creado!</h2>
+                    <p className="text-slate-500 text-sm text-center leading-relaxed">
+                        Tu pedido fue recibido con éxito.
                     </p>
-                    <button
-                        onClick={toggleCart}
-                        className="px-8 py-3 rounded-2xl text-white font-semibold text-[15px] active:scale-95 transition-transform"
-                        style={{ backgroundColor: 'var(--brand-primary)' }}
-                    >
-                        Volver al catálogo
-                    </button>
+                    <p className="text-slate-500 text-sm text-center leading-relaxed">
+                        Pronto recibirás una notificación por WhatsApp con los detalles de tu pedido.
+                    </p>
                 </div>
             </div>
         );
