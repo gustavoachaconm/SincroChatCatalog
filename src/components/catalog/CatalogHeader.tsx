@@ -11,6 +11,7 @@ interface CatalogHeaderProps {
     branding: BusinessBranding;
     catalogName: string;
     isReadOnly?: boolean;
+    onLogoLoad?: () => void;
 }
 
 export function CatalogHeader({
@@ -19,6 +20,7 @@ export function CatalogHeader({
     branding,
     catalogName,
     isReadOnly,
+    onLogoLoad,
 }: CatalogHeaderProps) {
     return (
         <header
@@ -41,9 +43,14 @@ export function CatalogHeader({
                         src={branding.logo}
                         alt={business.name}
                         className="w-16 h-16 rounded-2xl object-cover bg-white/20 shadow-lg mb-3 ring-2 ring-white/20"
+                        onLoad={onLogoLoad}
+                        onError={onLogoLoad}
                     />
                 ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg mb-3 ring-2 ring-white/20">
+                    <div
+                        className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg mb-3 ring-2 ring-white/20"
+                        ref={(el) => { if (el) onLogoLoad?.(); }}
+                    >
                         <span className="text-2xl font-bold text-white">
                             {business.name.charAt(0).toUpperCase()}
                         </span>

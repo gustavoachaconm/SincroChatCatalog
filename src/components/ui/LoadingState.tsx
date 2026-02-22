@@ -11,7 +11,8 @@ export function LoadingState() {
                     className="absolute inset-0 rounded-full border-[3px] border-slate-200"
                 />
                 <div
-                    className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-indigo-500 animate-spin"
+                    className="absolute inset-0 rounded-full border-[3px] border-transparent animate-spin"
+                    style={{ borderTopColor: 'var(--brand-primary, #6366f1)' }}
                 />
             </div>
 

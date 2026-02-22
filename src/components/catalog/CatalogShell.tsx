@@ -405,6 +405,7 @@ export default function CatalogShell() {
 
     const [data, setData] = useState<CatalogApiResponse | null>(null);
     const [loading, setLoading] = useState(true);
+    const [logoLoaded, setLogoLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isExpired, setIsExpired] = useState(false);
     const [isNotFound, setIsNotFound] = useState(false);
@@ -555,6 +556,7 @@ export default function CatalogShell() {
 
         try {
             setLoading(true);
+            setLogoLoaded(false);
             setError(null);
             const response = await fetchCatalog(token);
             initCartSession(token);
@@ -603,8 +605,8 @@ export default function CatalogShell() {
         );
     }
 
-    // Loading state
-    if (loading) {
+    // Loading state (API fetch + waiting for logo)
+    if (loading || (data && !logoLoaded)) {
         return <LoadingState />;
     }
 
@@ -632,6 +634,7 @@ export default function CatalogShell() {
                 branding={data.branding}
                 catalogName={data.catalog.name}
                 isReadOnly={isReadOnly}
+                onLogoLoad={() => setLogoLoaded(true)}
             />
 
             {/* Sticky Header: Search + Nav */}
