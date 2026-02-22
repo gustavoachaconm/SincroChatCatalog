@@ -10,10 +10,10 @@
 
 /* --- CSS Custom Properties (Dynamic Branding) --- */
 @theme {
-  --color-brand: #6366f1;
-  --color-brand-light: #818cf8;
-  --color-brand-dark: #4f46e5;
-  --color-brand-secondary: #8b5cf6;
+  --color-brand: #00bf63;
+  --color-brand-light: #33cc7f;
+  --color-brand-dark: #009e52;
+  --color-brand-secondary: #00a854;
   --color-surface: #ffffff;
   --color-surface-elevated: #f8fafc;
   --color-surface-dark: #0f172a;

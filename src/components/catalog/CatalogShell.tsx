@@ -539,18 +539,33 @@ export default function CatalogShell() {
             return;
         }
 
+        const preloadLogo = (logoUrl?: string | null): Promise<void> => {
+            return new Promise((resolve) => {
+                if (!logoUrl || !logoUrl.startsWith('http')) {
+                    resolve();
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = logoUrl;
+            });
+        };
+
         // Use demo data for preview mode
         if (token === 'preview') {
             initCartSession(token);
             setData(DEMO_DATA);
-            setLoading(false);
-            if (DEMO_DATA.sections.length > 0) {
-                setActiveSection(DEMO_DATA.sections[0].id);
-            }
             applyBranding(
                 DEMO_DATA.branding.primary_color,
                 DEMO_DATA.branding.secondary_color
             );
+            await preloadLogo(DEMO_DATA.branding.logo);
+            setLogoLoaded(true);
+            setLoading(false);
+            if (DEMO_DATA.sections.length > 0) {
+                setActiveSection(DEMO_DATA.sections[0].id);
+            }
             return;
         }
 
@@ -572,6 +587,10 @@ export default function CatalogShell() {
                 response.branding?.primary_color,
                 response.branding?.secondary_color
             );
+
+            // Preload logo before showing catalog
+            await preloadLogo(response.branding?.logo);
+            setLogoLoaded(true);
         } catch (err) {
             if (err instanceof CatalogApiError) {
                 if (err.isExpired) {
@@ -634,7 +653,6 @@ export default function CatalogShell() {
                 branding={data.branding}
                 catalogName={data.catalog.name}
                 isReadOnly={isReadOnly}
-                onLogoLoad={() => setLogoLoaded(true)}
             />
 
             {/* Sticky Header: Search + Nav */}

@@ -12,7 +12,7 @@ export function LoadingState() {
                 />
                 <div
                     className="absolute inset-0 rounded-full border-[3px] border-transparent animate-spin"
-                    style={{ borderTopColor: 'var(--brand-primary, #6366f1)' }}
+                    style={{ borderTopColor: 'var(--brand-primary, #00bf63)' }}
                 />
             </div>
 
