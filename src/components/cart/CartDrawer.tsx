@@ -51,13 +51,13 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
             type: order.type,
             delivery_address: order.delivery_address ?? undefined,
             items: items.map((item) => ({
-                product_id:  item.product.id,
-                base_price:  item.product.price,
-                quantity:    item.quantity,
-                unit_price:  item.unit_price,
+                product_id: item.product.id,
+                base_price: item.product.price,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
                 total_price: item.total_price,
-                modifiers:   item.modifiers,
-                notes:       item.notes,
+                modifiers: item.modifiers,
+                notes: item.notes,
             })),
         };
 
@@ -90,6 +90,9 @@ export function CartDrawer({ sessionToken, paymentMethods, order, customerPhone,
                     </p>
                     <p className="text-slate-500 text-sm text-center leading-relaxed">
                         Pronto recibirás una notificación por WhatsApp con los detalles de tu pedido.
+                    </p>
+                    <p className="text-slate-400 text-xs text-center mt-6">
+                        Ya puedes cerrar esta ventana.
                     </p>
                 </div>
             </div>
