@@ -110,6 +110,7 @@ export interface CatalogSubsectionItem {
     subsection_id?: string;
     name: string;
     price: number;
+    order?: number;
     is_active: boolean;
     created_at: string;
     updated_at?: string;

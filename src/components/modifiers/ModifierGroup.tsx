@@ -18,7 +18,8 @@ export function ModifierGroup({
     selectedItems,
     onChange,
 }: ModifierGroupProps) {
-    const items = subsection.items?.filter((i) => i.is_active) || [];
+    const items = (subsection.items?.filter((i) => i.is_active) || [])
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const selectedCount = selectedItems.length;
     const isComplete =
         !subsection.required ||

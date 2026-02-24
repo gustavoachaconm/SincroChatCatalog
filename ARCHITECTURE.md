@@ -144,6 +144,7 @@ Opciones dentro de una subsección.
 | `subsection_id` | uuid? (FK)  | → catalog_subsection.id |
 | `name`          | varchar     |                    |
 | `price`         | numeric     | Precio adicional   |
+| `order`         | numeric?    | Orden de display   |
 | `is_active`     | boolean     |                    |
 
 #### `catalog_product_subsection`
