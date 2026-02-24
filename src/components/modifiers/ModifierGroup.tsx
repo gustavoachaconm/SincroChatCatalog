@@ -18,6 +18,41 @@ export function ModifierGroup({
     selectedItems,
     onChange,
 }: ModifierGroupProps) {
+    // --- Text type: render a textarea instead of item list ---
+    if (subsection.type === 'text') {
+        const textValue = selectedItems[0]?.name ?? '';
+        const handleTextChange = (val: string) => {
+            if (val.trim()) {
+                onChange([{ item_id: subsection.id, name: val, price: 0, quantity: 1 }]);
+            } else {
+                onChange([]);
+            }
+        };
+        return (
+            <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                            {subsection.name}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                            {subsection.required ? 'Obligatorio' : 'Opcional'}
+                        </p>
+                    </div>
+                </div>
+                <textarea
+                    value={textValue}
+                    onChange={(e) => handleTextChange(e.target.value)}
+                    placeholder={subsection.description || 'Escribe aquí...'}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-700
+                        placeholder:text-slate-300 focus:outline-none focus:border-brand focus:ring-2
+                        focus:ring-brand/10 resize-none transition-all bg-slate-50"
+                    rows={2}
+                />
+            </div>
+        );
+    }
+
     const items = (subsection.items?.filter((i) => i.is_active) || [])
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const selectedCount = selectedItems.length;

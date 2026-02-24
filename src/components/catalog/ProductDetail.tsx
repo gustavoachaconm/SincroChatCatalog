@@ -21,7 +21,6 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
     const subsections = catalogProduct.subsections || [];
 
     const [quantity, setQuantity] = useState(1);
-    const [notes, setNotes] = useState('');
     const [modifierSelections, setModifierSelections] = useState<
         Record<string, SelectedModifierItem[]>
     >({});
@@ -76,8 +75,7 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
             catalogProduct.id,
             product,
             quantity,
-            modifiers,
-            notes || undefined
+            modifiers
         );
         onClose();
     };
@@ -198,21 +196,6 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
                                 </div>
                             )}
 
-                            {/* Notes */}
-                            <div className="px-5 pt-2 pb-4">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                                    Notas adicionales
-                                </label>
-                                <textarea
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="Ej: Sin cebolla, extra picante..."
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-700
-                                        placeholder:text-slate-300 focus:outline-none focus:border-brand focus:ring-2
-                                        focus:ring-brand/10 resize-none transition-all bg-slate-50"
-                                    rows={2}
-                                />
-                            </div>
                         </>
                     )}
                 </div>
