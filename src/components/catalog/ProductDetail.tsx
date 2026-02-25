@@ -182,6 +182,10 @@ export function ProductDetail({ catalogProduct, onClose, isReadOnly = false }: P
                             {subsections.length > 0 && (
                                 <div className="px-5 pt-4">
                                     {subsections
+                                        .filter((cps) =>
+                                            cps.subsection.type === 'text' ||
+                                            (cps.subsection.items?.some((i) => i.is_active) ?? false)
+                                        )
                                         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                                         .map((cps) => (
                                             <ModifierGroup

@@ -84,6 +84,27 @@ export const $cartSubtotal = computed($cartItems, (items) =>
 
 // --- Actions ---
 
+/**
+ * Generates a stable fingerprint for a cart item based on product + modifiers + notes.
+ * Used to detect duplicate items and merge them instead of creating separate entries.
+ */
+function getCartItemFingerprint(
+    catalogProductId: string,
+    modifiers: SelectedModifier[],
+    notes?: string
+): string {
+    const normalizedModifiers = [...modifiers]
+        .sort((a, b) => (a.group_name ?? '').localeCompare(b.group_name ?? ''))
+        .map((mod) => ({
+            group_name: mod.group_name,
+            items: [...mod.items]
+                .sort((a, b) => a.item_id.localeCompare(b.item_id))
+                .map((i) => ({ item_id: i.item_id, quantity: i.quantity })),
+        }));
+
+    return JSON.stringify({ catalogProductId, modifiers: normalizedModifiers, notes: notes ?? '' });
+}
+
 export function addToCart(
     catalogProductId: string,
     product: Product,
@@ -97,6 +118,23 @@ export function addToCart(
         0
     );
     const unitPrice = product.price + modifierTotal;
+    const fingerprint = getCartItemFingerprint(catalogProductId, modifiers, notes);
+
+    const existing = $cartItems.get().find(
+        (item) => getCartItemFingerprint(item.catalog_product_id, item.modifiers, item.notes) === fingerprint
+    );
+
+    if (existing) {
+        const newQty = existing.quantity + quantity;
+        $cartItems.set(
+            $cartItems.get().map((item) =>
+                item.id === existing.id
+                    ? { ...item, quantity: newQty, total_price: unitPrice * newQty }
+                    : item
+            )
+        );
+        return;
+    }
 
     const newItem: CartItem = {
         id: generateCartItemId(),
