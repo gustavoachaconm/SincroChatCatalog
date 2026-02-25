@@ -451,7 +451,7 @@ export default function CatalogShell() {
 
     const filteredSections: SectionWithProducts[] = useMemo(() => {
         if (!data) return [];
-        if (!searchQuery.trim()) return data.sections;
+        if (!searchQuery.trim()) return data.sections.filter((s) => s.products.length > 0);
 
         const query = searchQuery.toLowerCase().trim();
         return data.sections
